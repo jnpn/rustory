@@ -1,16 +1,13 @@
 extern crate reqwest;
-#[macro_use]
 extern crate serde;
 extern crate serde_json;
 extern crate rusqlite;
 #[macro_use]
 extern crate serde_derive;
 
-use serde::ser::{Serialize, SerializeStruct, Serializer};
+use serde::ser::{SerializeStruct, Serializer};
 use rusqlite::{Connection, OpenFlags};
 use reqwest::{Client, Response};
-use std::fmt;
-use std::iter::Map;
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -21,13 +18,14 @@ struct Thing {
 }
 
 fn urls(conn:Connection) -> Result<Vec<Thing>, rusqlite::Error> {
-    let mut stmt = try!(conn.prepare("SELECT * FROM urls LIMIT 10"));
+    let mut stmt = try!(conn.prepare("SELECT * FROM urls LIMIT 32"));
     let it = stmt
         .query_map(&[], |row| Thing {
             i: row.get("id"),
             s: row.get("url"),
         })
         .unwrap();
+    // TOFIX can this be iter().to_vec() ?
     let mut urls = Vec::new();
     for t in it {
         urls.push(t?)
@@ -46,6 +44,7 @@ impl serde::Serialize for ResponseWrapper {
             .iter()
             .map(|(k,v)| (String::from(k.as_str()),String::from(v.to_str().unwrap())))
             .collect::<Vec<(String,String)>>();
+        // TOFIX .collect .to_vec | to_map ?
         let m = to_map(m.to_vec());
         let mut s = serializer.serialize_struct("Resp", 2)?;
         s.serialize_field("status_code", &self.r.status().as_u16())?;
