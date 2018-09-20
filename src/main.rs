@@ -64,31 +64,17 @@ fn to_map(v:Vec<(String,String)>) -> HashMap<String,String> {
 fn main() {
     let path = String::from("History");
     let client = Client::new();
-    let c = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY);
-    match c {
-        Ok(conn) => {
-            match urls(conn) {
-                Ok(urls) => {
-                    let _rs = urls
-                        .iter()
-                        .map(|t| { client.head(t.s.as_str()).send() })
-                        .for_each(|m| {
-                            match m {
-                                Ok(r) => {
-                                    let w = ResponseWrapper { r };
-                                    let j = serde_json::to_string(&w);
-                                    match j {
-                                        Ok(s) => println!("{}", s),
-                                        _ => eprintln!("json encoding error for {:?}", w.r)
-                                    }
-                                },
-                                _ => println!("[error] after head...")
-                            }
-                        });
-                }
-                _ => panic!("sqlite query `urls` failed")
-            }
+    if let Ok(c) = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY) {
+        if let Ok(all) = urls(c) {
+            all.iter()
+                .map(|t| { client.head(t.s.as_str()).send() })
+                .for_each(|m| {
+                    if let Ok(r) = m {
+                        if let Ok(j) = serde_json::to_string(&ResponseWrapper { r }) {
+                            println!("{}", j)
+                        }
+                    }
+                })
         }
-        _ => panic!("connection to file `{}` failed", path)
     }
 }
