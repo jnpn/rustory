@@ -8,17 +8,18 @@ use reqwest::{Client, Response};
 use std::fmt;
 use std::iter::Map;
 
+#[derive(Serialize, Deserialize, Debug)]
 struct Thing {
     // id|url|title|visit_count|typed_count|last_visit_time|hidden
     i:i64,
     s:String,
 }
 
-impl std::fmt::Debug for Thing {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> fmt::Result {
-        write!(f,"({} {})", self.i, self.s)
-    }
-}
+// impl std::fmt::Debug for Thing {
+//     fn fmt(&self, f: &mut std::fmt::Formatter) -> fmt::Result {
+//         write!(f,"({} {})", self.i, self.s)
+//     }
+// }
 
 fn urls(conn:Connection) -> Result<Vec<Thing>, rusqlite::Error> {
     let mut stmt = try!(conn.prepare("SELECT * FROM urls"));
