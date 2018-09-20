@@ -61,13 +61,10 @@ fn main() {
         Ok(conn) => {
             match urls(conn) {
                 Ok(urls) => {
-                    //let lim = 32;
                     let _rs = urls
                         .iter()
                         .enumerate()
-                        .map(|(i,t)| {
-                            //println!("{} HEAD {:?}", i, t);
-                            client.head(t.s.as_str()).send() })
+                        .map(|(i,t)| { client.head(t.s.as_str()).send() })
                         .for_each(|m| {
                             match m {
                                 Ok(r) => {
@@ -81,21 +78,10 @@ fn main() {
                                 _ => println!("[error] after head...")
                             }
                         });
-                        //.collect::<Vec<Result<Response, reqwest::Error>>>();
-
-                    // println!("heads {}", rs.len());
-                    // let (a,_) = rs.as_slice().split_at(lim);
-                    // println!("heads {:?}", a);
-
-                    // println!("found: {:?} url(s)", urls.len());
-                    // let (a,_) = urls.as_slice().split_at(lim);
-                    // println!("first {}: {:?}", lim, a);
-
                 }
                 _ => panic!("sqlite query `urls` failed")
             }
         }
         _ => panic!("connection to file `{}` failed", path)
     }
-    // println!("bye.");
 }
