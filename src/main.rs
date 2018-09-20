@@ -1,8 +1,12 @@
 extern crate reqwest;
+#[macro_use]
 extern crate serde;
 extern crate serde_json;
 extern crate rusqlite;
+#[macro_use]
+extern crate serde_derive;
 
+use serde::ser::{Serialize, SerializeStruct, Serializer};
 use rusqlite::{Connection, OpenFlags};
 use reqwest::{Client, Response};
 use std::fmt;
@@ -42,6 +46,24 @@ fn _dump(s:Map<String,String>) {
     println!("{:?}", s);
 }
 
+struct ResponseWrapper { r: Response }
+
+impl serde::Serialize for ResponseWrapper {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let m = &self.r.headers()
+            .iter()
+            .map(|(k,v)| (String::from(k.as_str()),String::from(v.to_str().unwrap())))
+            .collect::<Vec<(String,String)>>();
+        let mut s = serializer.serialize_struct("Resp", 2)?;
+        s.serialize_field("status_code", &self.r.status().as_u16())?;
+        s.serialize_field("headers", m);
+        s.end()
+    }
+}
+
 fn main() {
     let path = String::from("History");
     let client = Client::new();
@@ -57,7 +79,20 @@ fn main() {
                         .map(|(i,t)| {
                             //println!("{} HEAD {:?}", i, t);
                             client.head(t.s.as_str()).send() })
-                        .collect::<Vec<Result<Response, reqwest::Error>>>();
+                        .for_each(|m| {
+                            match m {
+                                Ok(r) => {
+                                    let w = ResponseWrapper { r };
+                                    let j = serde_json::to_string(&w);
+                                    match j {
+                                        Ok(s) => println!("{}", s),
+                                        _ => eprintln!("json encoding error for {:?}", w.r)
+                                    }
+                                },
+                                _ => println!("[error] after head...")
+                            }
+                        });
+                        //.collect::<Vec<Result<Response, reqwest::Error>>>();
 
                     // println!("heads {}", rs.len());
                     // let (a,_) = rs.as_slice().split_at(lim);
