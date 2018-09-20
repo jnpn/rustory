@@ -11,6 +11,7 @@ use rusqlite::{Connection, OpenFlags};
 use reqwest::{Client, Response};
 use std::fmt;
 use std::iter::Map;
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Thing {
@@ -45,12 +46,20 @@ impl serde::Serialize for ResponseWrapper {
             .iter()
             .map(|(k,v)| (String::from(k.as_str()),String::from(v.to_str().unwrap())))
             .collect::<Vec<(String,String)>>();
-        //TODO make `m` a real map
+        let m = to_map(m.to_vec());
         let mut s = serializer.serialize_struct("Resp", 2)?;
         s.serialize_field("status_code", &self.r.status().as_u16())?;
-        s.serialize_field("headers", m);
+        s.serialize_field("headers", &m)?;
         s.end()
     }
+}
+
+fn to_map(v:Vec<(String,String)>) -> HashMap<String,String> {
+    let mut m = HashMap::new();
+    for (k,va) in v {
+        m.insert(k,va);
+    }
+    m
 }
 
 fn main() {
@@ -63,8 +72,7 @@ fn main() {
                 Ok(urls) => {
                     let _rs = urls
                         .iter()
-                        .enumerate()
-                        .map(|(i,t)| { client.head(t.s.as_str()).send() })
+                        .map(|t| { client.head(t.s.as_str()).send() })
                         .for_each(|m| {
                             match m {
                                 Ok(r) => {
