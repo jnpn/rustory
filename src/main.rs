@@ -19,14 +19,8 @@ struct Thing {
     s:String,
 }
 
-// impl std::fmt::Debug for Thing {
-//     fn fmt(&self, f: &mut std::fmt::Formatter) -> fmt::Result {
-//         write!(f,"({} {})", self.i, self.s)
-//     }
-// }
-
 fn urls(conn:Connection) -> Result<Vec<Thing>, rusqlite::Error> {
-    let mut stmt = try!(conn.prepare("SELECT * FROM urls"));
+    let mut stmt = try!(conn.prepare("SELECT * FROM urls LIMIT 10"));
     let it = stmt
         .query_map(&[], |row| Thing {
             i: row.get("id"),
@@ -40,12 +34,6 @@ fn urls(conn:Connection) -> Result<Vec<Thing>, rusqlite::Error> {
     Ok(urls)
 }
 
-fn _dump(s:Map<String,String>) {
-    let j = serde_json::to_string("foo");
-    println!("{:?}", j);
-    println!("{:?}", s);
-}
-
 struct ResponseWrapper { r: Response }
 
 impl serde::Serialize for ResponseWrapper {
@@ -57,6 +45,7 @@ impl serde::Serialize for ResponseWrapper {
             .iter()
             .map(|(k,v)| (String::from(k.as_str()),String::from(v.to_str().unwrap())))
             .collect::<Vec<(String,String)>>();
+        //TODO make `m` a real map
         let mut s = serializer.serialize_struct("Resp", 2)?;
         s.serialize_field("status_code", &self.r.status().as_u16())?;
         s.serialize_field("headers", m);
