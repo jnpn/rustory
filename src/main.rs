@@ -49,22 +49,22 @@ fn main() {
         Ok(conn) => {
             match urls(conn) {
                 Ok(urls) => {
-                    let lim = 32;
-                    let rs = urls
+                    //let lim = 32;
+                    let _rs = urls
                         .iter()
                         .enumerate()
                         .map(|(i,t)| {
-                            println!("{} HEAD {:?}", i, t);
+                            //println!("{} HEAD {:?}", i, t);
                             client.head(t.s.as_str()).send() })
                         .collect::<Vec<Result<Response, reqwest::Error>>>();
 
-                    println!("heads {}", rs.len());
-                    let (a,_) = rs.as_slice().split_at(lim);
-                    println!("heads {:?}", a);
+                    // println!("heads {}", rs.len());
+                    // let (a,_) = rs.as_slice().split_at(lim);
+                    // println!("heads {:?}", a);
 
-                    println!("found: {:?} url(s)", urls.len());
-                    let (a,_) = urls.as_slice().split_at(lim);
-                    println!("first {}: {:?}", lim, a);
+                    // println!("found: {:?} url(s)", urls.len());
+                    // let (a,_) = urls.as_slice().split_at(lim);
+                    // println!("first {}: {:?}", lim, a);
 
                 }
                 _ => panic!("sqlite query `urls` failed")
@@ -72,5 +72,5 @@ fn main() {
         }
         _ => panic!("connection to file `{}` failed", path)
     }
-    println!("bye.");
+    // println!("bye.");
 }
