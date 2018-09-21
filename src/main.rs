@@ -37,25 +37,16 @@ impl serde::Serialize for ResponseWrapper {
     where
         S: Serializer,
     {
-        let m = &self.r.headers()
+        let m:HashMap<String,String> = self.r.headers()
             .iter()
             .map(|(k,v)| (String::from(k.as_str()),String::from(v.to_str().unwrap())))
-            .collect::<Vec<(String,String)>>();
-        // TOFIX .collect .to_vec | to_map ?
-        let m = to_map(m.to_vec());
+            .collect::<HashMap<String,String>>();
+
         let mut s = serializer.serialize_struct("Resp", 2)?;
         s.serialize_field("status_code", &self.r.status().as_u16())?;
         s.serialize_field("headers", &m)?;
         s.end()
     }
-}
-
-fn to_map(v:Vec<(String,String)>) -> HashMap<String,String> {
-    let mut m = HashMap::new();
-    for (k,va) in v {
-        m.insert(k,va);
-    }
-    m
 }
 
 fn main() {
