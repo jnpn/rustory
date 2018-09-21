@@ -24,13 +24,10 @@ fn urls(conn:Connection) -> Result<Vec<Thing>, rusqlite::Error> {
             i: row.get("id"),
             s: row.get("url"),
         })
-        .unwrap();
-    // TOFIX can this be iter().to_vec() ?
-    let mut urls = Vec::new();
-    for t in it {
-        urls.push(t?)
-    }
-    Ok(urls)
+        .unwrap()
+        .map(|t| t.unwrap())
+        .collect::<Vec<Thing>>();
+    Ok(it)
 }
 
 struct ResponseWrapper { r: Response }
