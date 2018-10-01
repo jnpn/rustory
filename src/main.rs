@@ -65,17 +65,26 @@ fn all () {
     let path = String::from("History");
     let client = Client::new();
 
+    let foo = |s:&String| {
+        let v = client.head(s.as_str()).send();
+        if let Ok(r) = v {
+            if let Ok(j) = serde_json::to_string(&ResponseWrapper { r }) {
+                Some(j)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    };
+
     if let Ok(c) = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY) {
         if let Ok(all) = urls(c) {
             all.iter()
                 .inspect(|t| eprintln!("[info] {}", t.s.as_str()))
-                .map(|t| { client.head(t.s.as_str()).send() })
-                .for_each(|m| {
-                    if let Ok(r) = m {
-                        if let Ok(j) = serde_json::to_string(&ResponseWrapper { r }) {
-                            println!("{}", j)
-                        }
-                    }
+                .map(|t| { foo(&t.s) })
+                .for_each(|s| {
+                    if let Some(s) = s { println!("{}", s) }
                 })
         }
     }
