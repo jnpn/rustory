@@ -65,7 +65,7 @@ fn all () {
     let path = String::from("History");
     let client = Client::new();
 
-    let foo = |s:&String| {
+    let jsonify = |s:&String| {
         let v = client.head(s.as_str()).send();
         if let Ok(r) = v {
             if let Ok(j) = serde_json::to_string(&ResponseWrapper { r }) {
@@ -82,16 +82,12 @@ fn all () {
         if let Ok(all) = urls(c) {
             all.iter()
                 .inspect(|t| eprintln!("[info] {}", t.s.as_str()))
-                .map(|t| { foo(&t.s) })
-                .for_each(|s| {
-                    if let Some(s) = s { println!("{}", s) }
-                })
+                .map(|t| { jsonify(&t.s) })
+                .for_each(|s| { if let Some(s) = s { println!("{}", s) } })
         }
     }
 }
 
 fn main() {
-
     all()
-
 }
