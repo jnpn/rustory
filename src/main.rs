@@ -2,23 +2,21 @@ extern crate reqwest;
 extern crate serde;
 extern crate serde_json;
 extern crate rusqlite;
-#[macro_use]
-extern crate serde_derive;
 
 use serde::ser::{SerializeStruct, Serializer};
 use rusqlite::{Connection, OpenFlags};
 use reqwest::{Client, Response};
 use std::collections::HashMap;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Formatter, Result as Res};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 struct Thing {
     // id|url|title|visit_count|typed_count|last_visit_time|hidden
     i:i64,
     s:String,
 }
 
-fn urls(conn:Connection) -> std::result::Result<Vec<Thing>, rusqlite::Error> {
+fn urls(conn:Connection) -> Result<Vec<Thing>, rusqlite::Error> {
     let mut stmt = try!(conn.prepare("SELECT * FROM urls"));
     let it = stmt
         .query_map(&[], |row| Thing {
@@ -34,13 +32,13 @@ fn urls(conn:Connection) -> std::result::Result<Vec<Thing>, rusqlite::Error> {
 struct ResponseWrapper { r: Response }
 
 impl Debug for ResponseWrapper {
-    fn fmt(&self, formatter: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> Res {
         self.r.fmt(formatter)
     }
 }
 
 impl serde::Serialize for ResponseWrapper {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -68,7 +66,6 @@ fn all () {
     let client = Client::new();
 
     if let Ok(c) = Connection::open_with_flags(&path, OpenFlags::SQLITE_OPEN_READ_ONLY) {
-        info!("{} -> sqlite3: ok", path);
         if let Ok(all) = urls(c) {
             all.iter()
                 .inspect(|t| eprintln!("[info] {}", t.s.as_str()))
