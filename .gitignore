@@ -2,3 +2,7 @@
 **/*.rs.bk
 /Cargo.lock
 *~
+/dumps
+/TAGS
+/.dir-locals.el
+*.sqlite
